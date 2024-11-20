@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>An-Nasr Youth Day 2024 Photo Frame</title>
+    <!-- Cropper.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -37,12 +39,15 @@
             width: 500px;
             margin: 0 auto;
         }
-        canvas, img {
+        img, canvas {
             width: 100%;
             max-width: 500px;
             border: 2px solid #ccc;
             display: block;
             margin: 20px auto;
+        }
+        #cropImage {
+            display: none;
         }
         input[type="file"], button {
             display: block;
@@ -67,52 +72,79 @@
         <b style="color: black;">Create Your Social Media Profile Photo</b>
     </h1>
     <div class="container">
-        <!-- Frame placeholder with data-frame defined -->
+        <img id="cropImage" alt="Crop Image">
         <img id="staticFrame" src="photo_frame.png" alt="Photo Frame" data-frame="photo_frame.png">
         <canvas id="canvas" style="display: none;"></canvas>
         <input type="file" id="photoUpload" accept="image/*">
-        <button id="downloadBtn">Download Framed Photo</button>
+        <button id="applyCropBtn" style="display: none;">Apply Crop and Proceed</button>
+        <button id="downloadBtn" style="display: none;">Download Framed Photo</button>
     </div>
 
+    <!-- Cropper.js JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script>
         const photoUpload = document.getElementById('photoUpload');
+        const cropImage = document.getElementById('cropImage');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        const downloadBtn = document.getElementById('downloadBtn');
         const staticFrame = document.getElementById('staticFrame');
-        const frameSrc = staticFrame.getAttribute('data-frame'); // Fetch the frame source from data-frame
+        const frameSrc = staticFrame.getAttribute('data-frame'); // Fetch the frame source
+        const applyCropBtn = document.getElementById('applyCropBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
 
-        let photoImage = null;
+        let cropper = null;
+        let croppedImage = null;
 
-        // Load and process the photo
+        // Load and show the image for cropping
         photoUpload.addEventListener('change', function (e) {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function (event) {
-                    photoImage = new Image();
-                    photoImage.src = event.target.result;
-                    photoImage.onload = () => {
-                        drawCanvas(); // Draw the canvas after the photo is loaded
-                    };
+                    cropImage.src = event.target.result;
+                    cropImage.style.display = 'block';
+                    staticFrame.style.display = 'none';
+                    applyCropBtn.style.display = 'block';
+
+                    // Initialize Cropper.js
+                    if (cropper) cropper.destroy(); // Destroy previous cropper instance
+                    cropper = new Cropper(cropImage, {
+                        aspectRatio: 1, // Square cropping
+                        viewMode: 2, // Restrict crop box to image bounds
+                    });
                 };
                 reader.readAsDataURL(file);
             }
         });
 
-        // Function to draw the canvas
-        function drawCanvas() {
-            if (!photoImage) return; // Ensure photo is uploaded before drawing
+        // Apply the crop and proceed to combine with frame
+        applyCropBtn.addEventListener('click', () => {
+            if (cropper) {
+                const canvasCrop = cropper.getCroppedCanvas({
+                    width: 500,
+                    height: 500,
+                });
+                croppedImage = new Image();
+                croppedImage.src = canvasCrop.toDataURL('image/png');
+                croppedImage.onload = () => {
+                    drawCanvas(); // Combine cropped image with the frame
+                };
 
+                // Hide crop-related UI
+                cropImage.style.display = 'none';
+                applyCropBtn.style.display = 'none';
+            }
+        });
+
+        // Function to combine the cropped image with the frame
+        function drawCanvas() {
             // Set canvas size
             canvas.width = 500;
             canvas.height = 500;
 
-            // Resize and center the photo
-            const size = Math.min(photoImage.width, photoImage.height);
-            const offsetX = (photoImage.width - size) / 2;
-            const offsetY = (photoImage.height - size) / 2;
-            ctx.drawImage(photoImage, offsetX, offsetY, size, size, 0, 0, 500, 500);
+            // Draw the cropped image
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(croppedImage, 0, 0, canvas.width, canvas.height);
 
             // Draw the static frame on top
             const frameImage = new Image();
@@ -121,11 +153,9 @@
                 ctx.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
             };
 
-            // Show the canvas and hide the placeholder frame
-            staticFrame.style.display = 'none';
+            // Show the final canvas and the download button
             canvas.style.display = 'block';
-
-            downloadBtn.style.display = 'block'; // Show download button
+            downloadBtn.style.display = 'block';
         }
 
         // Download the final framed photo
