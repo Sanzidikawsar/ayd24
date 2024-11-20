@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Frame App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            height: 100vh;
+            background-color: #f5f5f5;
+        }
+        .container {
+            text-align: center;
+        }
+        canvas {
+            display: block;
+            margin: 10px auto;
+        }
+        input[type="file"], select, button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .frame-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .frame-selector img {
+            width: 100px;
+            height: 100px;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .frame-selector img.selected {
+            border: 2px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Photo Frame App</h1>
+        <div class="frame-selector" id="frameSelector">
+            <img src="photo_frame.png" alt="Frame 1" data-frame="frame1.png">
+        </div>
+        <input type="file" id="photoUpload" accept="image/*">
+        <canvas id="canvas"></canvas>
+        <button id="downloadBtn" style="display: none;">Download Framed Photo</button>
+    </div>
+
+    <script>
+        const frameSelector = document.getElementById('frameSelector');
+        const photoUpload = document.getElementById('photoUpload');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        let selectedFrame = null;
+
+        // Handle frame selection
+        frameSelector.addEventListener('click', (e) => {
+            if (e.target.tagName === 'IMG') {
+                document.querySelectorAll('.frame-selector img').forEach(img => img.classList.remove('selected'));
+                e.target.classList.add('selected');
+                selectedFrame = e.target.getAttribute('data-frame');
+
+                if (canvas.width > 0 && canvas.height > 0) {
+                    drawCanvas();
+                }
+            }
+        });
+
+        // Load and process the photo
+        photoUpload.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    const photo = new Image();
+                    photo.src = event.target.result;
+                    photo.onload = () => {
+                        // Resize photo to square focusing on the center
+                        const size = Math.min(photo.width, photo.height);
+                        const offsetX = (photo.width - size) / 2;
+                        const offsetY = (photo.height - size) / 2;
+
+                        canvas.width = 500; // Set the canvas size
+                        canvas.height = 500;
+
+                        const scaledCanvas = document.createElement('canvas');
+                        scaledCanvas.width = 500;
+                        scaledCanvas.height = 500;
+                        const scaledCtx = scaledCanvas.getContext('2d');
+
+                        scaledCtx.drawImage(photo, offsetX, offsetY, size, size, 0, 0, 500, 500);
+
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(scaledCanvas, 0, 0, 500, 500);
+
+                        if (selectedFrame) {
+                            drawCanvas();
+                        }
+
+                        downloadBtn.style.display = 'block';
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function drawCanvas() {
+            const frameImage = new Image();
+            frameImage.src = selectedFrame;
+            frameImage.onload = () => {
+                ctx.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
+            };
+        }
+
+        // Download the final framed photo
+        downloadBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'framed-photo.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+    </script>
+</body>
+</html>
