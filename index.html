@@ -63,9 +63,12 @@
         <a href="https://www.annasr.org/ayd24" target="_blank">
             An-Nasr Youth Day 2024
         </a>
+        <br>
+        <b style="color: black;">Create Your Social Media Profile Photo</b>
     </h1>
     <div class="container">
-        <img id="staticFrame" src="frame.png" alt="Photo Frame">
+        <!-- Frame placeholder with data-frame defined -->
+        <img id="staticFrame" src="photo_frame.png" alt="Photo Frame" data-frame="photo_frame.png">
         <canvas id="canvas" style="display: none;"></canvas>
         <input type="file" id="photoUpload" accept="image/*">
         <button id="downloadBtn">Download Framed Photo</button>
@@ -77,7 +80,7 @@
         const ctx = canvas.getContext('2d');
         const downloadBtn = document.getElementById('downloadBtn');
         const staticFrame = document.getElementById('staticFrame');
-        const frameSrc = "photo_frame.png"; // Path to your static frame
+        const frameSrc = staticFrame.getAttribute('data-frame'); // Fetch the frame source from data-frame
 
         let photoImage = null;
 
