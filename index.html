@@ -3,39 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Photo Frame App</title>
+    <title>An-Nasr Youth Day 2024 Photo Frame</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            margin: 0;
-            height: 100vh;
             background-color: #f5f5f5;
-        }
-        .container {
             text-align: center;
         }
-        canvas {
+        h1 {
+            margin: 20px 0;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px;
+        }
+        h1 a {
+            text-decoration: none;
+            color: #fff;
+        }
+        h1 a:hover {
+            text-decoration: underline;
+        }
+        .container {
+            max-width: 90%;
+            width: 500px;
+            margin: 0 auto;
+        }
+        canvas, img {
+            width: 100%;
+            max-width: 500px;
+            border: 2px solid #ccc;
             display: block;
-            margin: 10px auto;
+            margin: 20px auto;
         }
         input[type="file"], button {
-            margin: 10px;
+            display: block;
+            margin: 20px auto;
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+        }
+        button {
+            display: none; /* Initially hidden */
         }
     </style>
 </head>
 <body>
+    <h1>
+        <a href="https://www.annasr.org/ayd24" target="_blank">
+            An-Nasr Youth Day 2024
+        </a>
+    </h1>
     <div class="container">
-        <h1>Photo Frame App</h1>
+        <img id="staticFrame" src="frame.png" alt="Photo Frame">
+        <canvas id="canvas" style="display: none;"></canvas>
         <input type="file" id="photoUpload" accept="image/*">
-        <canvas id="canvas"></canvas>
-        <button id="downloadBtn" style="display: none;">Download Framed Photo</button>
+        <button id="downloadBtn">Download Framed Photo</button>
     </div>
 
     <script>
@@ -43,8 +76,9 @@
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const downloadBtn = document.getElementById('downloadBtn');
+        const staticFrame = document.getElementById('staticFrame');
+        const frameSrc = "photo_frame.png"; // Path to your static frame
 
-        const staticFrame = 'photo_frame.png'; // Path to your static frame
         let photoImage = null;
 
         // Load and process the photo
@@ -79,12 +113,16 @@
 
             // Draw the static frame on top
             const frameImage = new Image();
-            frameImage.src = staticFrame;
+            frameImage.src = frameSrc;
             frameImage.onload = () => {
                 ctx.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
             };
 
-            downloadBtn.style.display = 'block';
+            // Show the canvas and hide the placeholder frame
+            staticFrame.style.display = 'none';
+            canvas.style.display = 'block';
+
+            downloadBtn.style.display = 'block'; // Show download button
         }
 
         // Download the final framed photo
